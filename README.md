@@ -1,6 +1,6 @@
 # xFD
 
-xFD is a fixed-point library for C++, with support for all arithmetic functions, as well as many scientific functions and constants. Numbers are stored as base-10 in a deque, enabling arbitrary-precision arithmetic. Full support for IEEE-754 special numbers is also available.
+xFD is a fixed-point library for C++, with support for all arithmetic functions, as well as many scientific functions and constants. Numbers are stored as base-10 in a deque, enabling arbitrary-precision arithmetic. Full support for IEEE-754 special numbers is also available. Say goodbye to [0.1 + 0.2 != 0.3](https://0.30000000000000004.com/) errors - xFD can calculate these values correctly.
 
 The library is desiged for you to use the class as if it was a primitive type, by introducing a user-defined-lieral for constants, and making all math functions static and short to type.
 
