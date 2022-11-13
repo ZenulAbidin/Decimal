@@ -1,0 +1,6 @@
+*.so
+*.o
+*/*.o
+*/*.so
+playground
+test_decimal
