@@ -626,8 +626,6 @@ public:
     Decimal& operator--() { *this = *this-1; return *this; };
 
 
-
-
     //Comparators
     bool operator== (const Decimal& right) const;
     bool operator== (const char& right) const
@@ -786,6 +784,8 @@ public:
     bool FitsUInt32() const;
     bool FitsLong64() const;
     bool FitsULong64() const;
+    bool FitsLongLong64() const;
+    bool FitsULongLong64() const;
     bool FitsFloat() const;
     bool FitsDouble() const;
     bool FitsLongDouble() const;
@@ -798,6 +798,8 @@ public:
     unsigned int ToUInt32() const;
     long ToLong64() const;
     unsigned long ToULong64() const;
+    long long ToLongLong64() const;
+    unsigned long long ToULongLong64() const;
     float ToFloat() const;
     double ToDouble() const;
     long double ToLongDouble() const;
@@ -810,6 +812,8 @@ public:
     operator unsigned int() { return ToUInt32(); }
     operator long() { return ToLong64(); }
     operator unsigned long() { return ToULong64(); }
+    operator long long() { return ToLongLong64(); }
+    operator unsigned long long() { return ToULongLong64(); }
     operator float() { return ToFloat(); }
     operator double() { return ToDouble(); }
     operator long double() { return ToLongDouble(); }

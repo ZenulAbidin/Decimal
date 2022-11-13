@@ -50,6 +50,9 @@ int main() {
         else if (tokens[1] == "/") {
             std::cout << a/b << std::endl;
         }
+        else if (tokens[1] == "%") {
+            std::cout << a%b << std::endl;
+        }
         else if (tokens[1] == "round") {
             int places = b;
             std::cout << xFD::Round(a, places) << std::endl;

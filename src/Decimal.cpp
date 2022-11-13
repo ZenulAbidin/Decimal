@@ -839,6 +839,11 @@ Decimal operator%(const Decimal& left, const Decimal& right)
     }
 
     Decimal Q , R , D , N,  zero, ret;
+    Q.type = Decimal::NumType::_NORMAL;
+    R.type = Decimal::NumType::_NORMAL;
+    D.type = Decimal::NumType::_NORMAL;
+    N.type = Decimal::NumType::_NORMAL;
+    ret.type = Decimal::NumType::_NORMAL;
     zero = 0;
 
     if (left.type == Decimal::NumType::_NAN || right.type == Decimal::NumType::_NAN ||
@@ -1884,6 +1889,29 @@ bool Decimal::FitsULong64() const {
     return true;
 }
 
+bool Decimal::FitsLongLong64() const {
+    if (type != Decimal::NumType::_NORMAL) return false;
+    if (decimals > 0) return false;
+
+    Decimal a(std::to_string(LONG_LONG_MIN));
+    Decimal b(std::to_string(LONG_LONG_MAX));
+    if (*this < a) return false;
+    if (*this > b) return false;
+
+    return true;
+}
+
+bool Decimal::FitsULongLong64() const {
+    if (type != Decimal::NumType::_NORMAL) return false;
+    if (decimals > 0) return false;
+
+    Decimal b(std::to_string(ULONG_LONG_MAX));
+    if (*this < 0) return false;
+    if (*this > b) return false;
+
+    return true;
+}
+
 bool Decimal::FitsFloat() const {
     // IEEE-754 special numbers support for floating-points
     // is unreliable so don't use it
@@ -2164,6 +2192,49 @@ unsigned long Decimal::ToULong64() const
     }
 
     unsigned long dec = 1;
+
+    for(size_t i = 0 ; i< number.size(); i++)
+    {
+        var += CharToInt(number[i])*dec;
+        dec*=10;
+    }
+
+    return var;
+};
+
+long long Decimal::ToLongLong64() const
+{
+    long long var = 0;
+
+    if(!this->FitsLongLong64())
+    {
+        throw DecimalIllegalOperation("Decimal cannot be converted to LongLong64");
+    }
+
+    long long dec = 1;
+
+    for(size_t i = 0 ; i< number.size(); i++)
+    {
+        var += CharToInt(number[i])*dec;
+        dec*=10;
+    }
+
+    if (sign=='-')
+        var *= -1;
+
+    return var;
+};
+
+unsigned long long Decimal::ToULongLong64() const
+{
+    unsigned long long var = 0;
+
+    if(!this->FitsULongLong64())
+    {
+        throw DecimalIllegalOperation("Decimal cannot be converted to ULongLong64");
+    }
+
+    unsigned long long dec = 1;
 
     for(size_t i = 0 ; i< number.size(); i++)
     {

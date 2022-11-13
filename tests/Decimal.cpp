@@ -293,9 +293,6 @@ BOOST_AUTO_TEST_CASE(Arithmetic) {
     c /= 8_D;
     BOOST_CHECK_EQUAL(c.ToFixedString(), "+0.0625");
 
-    c=a.PrecDiv(b,10);
-    BOOST_CHECK_EQUAL(c.ToFixedString(), "+0.5000000000");
-
     c=a%b;
     BOOST_CHECK_EQUAL(c.ToFixedString(), "+1");
 
