@@ -819,6 +819,7 @@ public:
     operator float() { return ToFloat(); }
     operator double() { return ToDouble(); }
     operator long double() { return ToLongDouble(); }
+    operator std::string() { return ToString(); }
 
 
     inline int8_t ToInt8_T() const {return (int8_t) this->ToChar8(); }
