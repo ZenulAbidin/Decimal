@@ -9,6 +9,12 @@ int main() {
     while (true) {
         tokens.clear();
         std::getline(std::cin, input);
+        if (std::cin.eof()) {
+            break;
+        }
+        else if (input == "quit") {
+            break;
+        }
         size_t pos = 0;
         std::string token;
         std::string delimiter = " ";
@@ -43,6 +49,10 @@ int main() {
         }
         else if (tokens[1] == "/") {
             std::cout << a/b << std::endl;
+        }
+        else if (tokens[1] == "round") {
+            int places = b;
+            std::cout << xFD::Round(a, places) << std::endl;
         }
         else {
             std::cout << "Unrecognized operator..." << std::endl;

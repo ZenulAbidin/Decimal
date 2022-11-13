@@ -815,171 +815,17 @@ Decimal operator/(const Decimal& left, const Decimal& right) {
     // Keep trimming the decimal places, so that it doesn't grow
     // monstrously.
     for (int i = 0; i < right.iterations.div; i++) {
-        X = X*(2 - right*X);
+        X = X*(2_D - right*X);
         while (X.decimals > right.iterations.decimals) {
             X.decimals--;
             X.number.pop_front();
         }
     }
     X.TrailTrim();
-    //TODO implement rounding
+    X = xFD::Round(X, -right.iterations.decimals);
 
     return left*X;
 }
-
-Decimal Decimal::PrecDiv(const Decimal& right, int div_precision)
-{
-    Decimal left = *this;
-    Decimal tmp;
-    tmp.type = Decimal::NumType::_NORMAL;
-    tmp.iterations.throw_on_error = left.iterations.throw_on_error || right.iterations.throw_on_error;
-
-    Decimal Q , R , D , N,  zero ;
-    Q.type = Decimal::NumType::_NORMAL;
-    R.type = Decimal::NumType::_NORMAL;
-    D.type = Decimal::NumType::_NORMAL;
-    N.type = Decimal::NumType::_NORMAL;
-    zero = 0;
-
-    if (left.type == Decimal::NumType::_NAN || right.type == Decimal::NumType::_NAN ||
-            (left == zero && right == zero) ||
-            (left.type == Decimal::NumType::_INFINITY && right.type == Decimal::NumType::_INFINITY)) {
-        tmp.SpecialClear();
-        tmp.type = Decimal::NumType::_NAN;
-        return tmp;
-    }
-    else if (right.type == Decimal::NumType::_INFINITY) {
-        tmp = 0;
-        tmp.type = Decimal::NumType::_NORMAL;
-        return tmp;
-    }
-    else if (right == zero)
-    {
-        if (tmp.iterations.throw_on_error) {
-            throw DecimalIllegalOperation("Division by 0");
-        }
-        else {
-            tmp.SpecialClear();
-            tmp.type = Decimal::NumType::_INFINITY;
-            return tmp;
-        }
-    }
-    else if (left == zero) {
-        return zero;
-    }
-
-    N= ( left>zero ) ? (left) : (left * (-1));
-    D= ( right>zero ) ? (right) : (right* (-1));
-    R.sign='+';
-
-    int Ndiff = N.iterations.decimals - N.decimals;
-    int Ddiff = D.iterations.decimals - D.decimals;
-    while( (N.decimals!=0) || (D.decimals!=0) )
-    {
-        if(N.decimals==0)
-            N.number.push_front('0');
-        else
-            N.decimals--;
-
-        if(D.decimals==0)
-            D.number.push_front('0');
-        else
-            D.decimals--;
-    }
-    for (int i = 0; i < Ndiff; i++) {
-        N.number.push_front('0');
-    }
-    for (int i = 0; i < Ddiff; i++) {
-        D.number.push_front('0');
-    }
-    N.LeadTrim();
-    D.LeadTrim();
-
-    //Increase Precision to div_precision
-    for (size_t i=0; i < (size_t) div_precision ; i++)
-        N.number.push_front('0');
-
-    int check= Decimal::CompareNum(N,D);
-
-    if(check==0)
-    {
-        tmp.number.push_front('1');
-    }
-    if(check==2)
-    {
-        return zero;
-    }
-    else
-    {
-        while(!N.number.empty())
-        {
-            R.number.push_front(*(N.number.rbegin()));
-            N.number.pop_back();
-
-            bool is_zero=true;
-            std::deque<char>::const_iterator zero_iter = R.number.begin();
-            for(;zero_iter!= R.number.end();++zero_iter)
-                if(*zero_iter!='0')
-                    is_zero=false;
-
-            if((R>=D) && (!is_zero))
-            {
-                int Q_sub=0;
-                int min=0;
-                int max = 9;
-
-                while( R >= D)
-                {
-                    int avg = max-min;
-                    int mod_avg = avg / 2;
-                    avg= (avg - mod_avg * 2) ? (mod_avg + 1) : (mod_avg);
-
-                    int div_check = Decimal::CompareNum ( R, D*avg );
-
-                    if (div_check == 2)
-                    {
-                        max = avg;
-                    }
-                    else
-                    {
-                        Q_sub = Q_sub + avg;
-                        R = R - D * avg;
-
-                        max = 9;
-                    }
-                }
-
-                Q.number.push_front(Decimal::IntToChar(Q_sub));
-
-                bool is_zero=true;
-                std::deque<char>::const_iterator zero_iter = R.number.begin();
-                for(;zero_iter!= R.number.end();++zero_iter)
-                    if(*zero_iter!='0')
-                        is_zero=false;
-                if(is_zero)
-                    R.number.clear();
-
-            }
-            else
-            {
-                Q.number.push_front('0');
-            }
-        }
-        tmp = Q;
-    }
-
-    if( ((left.sign=='-')&& (right.sign=='-')) || ((left.sign=='+')&& (right.sign=='+')) )
-        tmp.sign='+';
-    else
-        tmp.sign='-';
-
-    tmp.decimals = div_precision;
-    tmp.iterations.decimals = (left.iterations.decimals > div_precision) ? left.iterations.decimals : 
-        (right.iterations.decimals > div_precision) ? right.iterations.decimals : div_precision;
-    tmp.LeadTrim();
-
-    return tmp;
-};
 
 Decimal operator%(const Decimal& left, const Decimal& right)
 {
@@ -1128,6 +974,171 @@ Decimal Decimal::Floor(const Decimal& x) {
     }
     return y;
 }
+
+Decimal Decimal::Round(const Decimal& x, int places) {
+    auto y = x;
+    y.TrailTrim();
+    y.LeadTrim();
+    int add_ints = 0;
+    int add_decs = 0;
+    int chop_limit = places + x.decimals;
+    int force_zero = false;
+    if (chop_limit < 0) {
+        return x;
+    }
+    else if (static_cast<size_t>(chop_limit) >= y.number.size()) {
+        return 0_D; // An n-digit number cannot possibly have >=5
+                    // in the n+1st decimal place.
+    }
+    else if (static_cast<size_t>(chop_limit) == y.number.size()-1 ||
+            (y.Ints() == 1 && y.number[chop_limit] == '0' && static_cast<size_t>(chop_limit) == y.number.size()-2)) {
+        int chop_index = chop_limit;
+        if (y.Ints() == 1 && y.number[chop_limit] == '0') {
+            force_zero = true;
+        }
+        if (y.number[chop_index] >= '5') {
+            y.number.clear();
+            if (force_zero) {
+                y.number.push_front('0');
+            }
+            y.number.push_front('1');
+            for (int i = 0; i <= chop_index; i++) {
+                y.number.push_front('0');
+            }
+            y.TrailTrim();
+            return y;
+        }
+        else {
+            return 0_D;
+        }
+    }
+
+    // We are asked to round something within range.
+    // Chop off everything below the limit
+    for (int i = 0; i < chop_limit; i++) {
+        y.number.pop_front();
+        if (y.decimals > 0) {
+            --y.decimals;
+            ++add_decs;
+        }
+        else {
+            ++add_ints;
+        }
+    }
+
+
+    bool add1 = false;
+    if (y.number[0] >= '5') {
+        add1 = true;
+    }
+    
+    y.number.pop_front();
+    if (y.decimals > 0) {
+        --y.decimals;
+        ++add_decs;
+    }
+    else {
+        ++add_ints;
+    }
+
+    if (add1) {
+        if (y.number[0] > '9') {
+            if (y.number.size() > 0) {
+                ++y.number[1];
+            }
+            else {
+                y.number.push_back('1');
+            }
+        }
+        else {
+            ++y.number[0];
+        }
+        add1 = false;
+    }
+
+
+
+    for (int i = 0; i < add_ints; i++) {
+        y.number.push_front('0');
+    }
+    if (places < 0) {
+        y.decimals = -(places+1);
+    }
+    else {
+        y.decimals = 0;
+    }
+
+    for (size_t i = 0; i < y.number.size(); i++) {
+        if (y.number[i] > '9') {
+            if (i+1 < x.number.size()) {
+                ++y.number[i+1];
+            }
+            else {
+                y.number.push_back('1');
+            }
+            y.number[i] = '0';
+        }
+        else {
+            break;
+        }
+    }
+     
+    return y;
+}
+
+Decimal Decimal::Inc() {
+    Decimal x = *this;
+    if (x < 0) {
+        return -(-x).Dec();
+    }
+    ++x.number[0];
+    for (size_t i = 0; i < x.number.size(); i++) {
+        if (x.number[i] > '9') {
+            if (i+1 < x.number.size()) {
+                ++x.number[i+1];
+            }
+            else {
+                x.number.push_back('1');
+            }
+            x.number[i] = '0';
+        }
+        else {
+            break;
+        }
+    }
+    x.TrailTrim();
+    return x;
+};
+
+Decimal Decimal::Dec() {
+    Decimal x = *this;
+    if (x <= 0) {
+        return -xFD::Abs(x).Inc();
+    }
+    --x.number[0];
+    x.LeadTrim();
+    for (size_t i = 0; i < x.number.size(); i++) {
+        if (x.number[i] < '0') {
+            // It follows that since x > 0 and we
+            // trimmed the leading zeros of X, there
+            // is at least 1 digit in the number
+            // greater than zero - at the very least,
+            // the most significant digit is > 0.
+                if (i+1 < x.number.size()) {
+                    --x.number[i+1];
+                }
+                else {
+                    throw DecimalIllegalOperation("Assertion failed, should not get here");
+                }
+            x.number[i] = '9';
+        }
+        else {
+            break;
+        }
+    }
+    x.TrailTrim();
+    return x;
+};
 
 Decimal DecimalConstants::ImprovisedSqrt(const Decimal& a) const {
     Decimal x = 1_D;

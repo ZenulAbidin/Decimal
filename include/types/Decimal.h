@@ -546,30 +546,6 @@ public:
 
     static Decimal Divide(const Decimal& left, const Decimal& right);
 
-    Decimal PrecDiv(const Decimal& right, int div_precision);
-    Decimal PrecDiv(const char& right, int div_precision)
-    { return PrecDiv(Decimal(right), div_precision);}
-    Decimal PrecDiv(const unsigned char& right, int div_precision)
-    { return PrecDiv(Decimal(right), div_precision);}
-    Decimal PrecDiv(const short& right, int div_precision)
-    { return PrecDiv(Decimal(right), div_precision);}
-    Decimal PrecDiv(const unsigned short& right, int div_precision)
-    { return PrecDiv(Decimal(right), div_precision);}
-    Decimal PrecDiv(const int& right, int div_precision)
-    { return PrecDiv(Decimal(right), div_precision);}
-    Decimal PrecDiv(const unsigned int& right, int div_precision)
-    { return PrecDiv(Decimal(right), div_precision);}
-    Decimal PrecDiv(const long& right, int div_precision)
-    { return PrecDiv(Decimal(right), div_precision);}
-    Decimal PrecDiv(const unsigned long& right, int div_precision)
-    { return PrecDiv(Decimal(right), div_precision);}
-    Decimal PrecDiv(const float& right, int div_precision)
-    { return PrecDiv(Decimal(right), div_precision);}
-    Decimal PrecDiv(const double& right, int div_precision)
-    { return PrecDiv(Decimal(right), div_precision);}
-    Decimal PrecDiv(const long double& right, int div_precision)
-    { return PrecDiv(Decimal(right), div_precision);}
-
     friend Decimal operator%(const Decimal& left, const Decimal& right);
     friend Decimal operator%(const Decimal& left, const char& right)
     { return left % Decimal(right); }
@@ -826,6 +802,19 @@ public:
     double ToDouble() const;
     long double ToLongDouble() const;
 
+    operator char() { return ToChar8(); }
+    operator unsigned char() { return ToUChar8(); }
+    operator short() { return ToShort16(); }
+    operator unsigned short() { return ToUShort16(); }
+    operator int() { return ToInt32(); }
+    operator unsigned int() { return ToUInt32(); }
+    operator long() { return ToLong64(); }
+    operator unsigned long() { return ToULong64(); }
+    operator float() { return ToFloat(); }
+    operator double() { return ToDouble(); }
+    operator long double() { return ToLongDouble(); }
+
+
     inline int8_t ToInt8_T() const {return (int8_t) this->ToChar8(); }
     inline uint8_t ToUInt8_T() const {return (uint8_t) this->ToUChar8(); }
     inline int16_t ToInt16_T() const {return (int16_t) this->ToShort16(); }
@@ -917,6 +906,9 @@ public:
     static Decimal Ceil(const Decimal& x) {
         return xFD::Floor(x) + 1_D;
     }
+    static Decimal Round(const Decimal& x, int places = 0);
+    Decimal Inc();
+    Decimal Dec();
 
     //Miscellaneous Methods
     inline int Decimals() const { return decimals; };

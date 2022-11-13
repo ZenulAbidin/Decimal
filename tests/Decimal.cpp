@@ -324,6 +324,22 @@ BOOST_AUTO_TEST_CASE(Arithmetic) {
     BOOST_CHECK_EQUAL(a.ToFixedString(), "+2");
     a--;
     BOOST_CHECK_EQUAL(a.ToFixedString(), "+1");
+
+    // Rounding and increment, decrement test
+    
+    Decimal d = "20.02"_D;
+    BOOST_CHECK_EQUAL(d.Inc().ToFixedString(), "+20.03");
+    BOOST_CHECK_EQUAL(d.Dec().ToFixedString(), "+20.01");
+
+    d = -"20.02"_D;
+    BOOST_CHECK_EQUAL(d.Inc().ToFixedString(), "-20.01");
+    BOOST_CHECK_EQUAL(d.Dec().ToFixedString(), "-20.03");
+
+    d = "95.045"_D;
+    BOOST_CHECK_EQUAL(xFD::Round(d, -3).ToFixedString(), "+95.05");
+    BOOST_CHECK_EQUAL(xFD::Round(d, -2).ToFixedString(), "+95");
+    BOOST_CHECK_EQUAL(xFD::Round(d, 2).ToFixedString(), "+100");
+
 }
 
 BOOST_AUTO_TEST_SUITE_END();
