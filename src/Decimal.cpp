@@ -351,19 +351,25 @@ Decimal operator+ ( const Decimal& left_, const Decimal& right_ )
 {
     Decimal tmp;
     tmp.type = Decimal::NumType::_NORMAL;
-    tmp.iterations.throw_on_error = left_.iterations.throw_on_error || right_.iterations.throw_on_error;
+    tmp.iterations.throw_on_error = left_.iterations.TOE() || right_.iterations.TOE();
 
     Decimal left,right;
     left=left_;
     right=right_;
 
-    if (left.type == Decimal::NumType::_NAN || right.type == Decimal::NumType::_NAN) {
+    if (left.IsNaN() || right.IsNaN()) {
+        if (left.iterations.TOE() || right.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
         tmp.SpecialClear();
         tmp.type = Decimal::NumType::_NAN;
         return tmp;
     }
-    else if (left.type == Decimal::NumType::_INFINITY || right.type == Decimal::NumType::_INFINITY) {
+    else if (left.IsInf() || right.IsInf()) {
         if (left.sign != right.sign) {
+            if (left.iterations.TOE() || right.iterations.TOE()) {
+                throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+            }
             tmp.SpecialClear();
             tmp.type = Decimal::NumType::_NAN;
             return tmp;
@@ -468,29 +474,41 @@ Decimal operator- ( const Decimal& left_, const Decimal& right_ )
 {
     Decimal tmp;
     tmp.type = Decimal::NumType::_NORMAL;
-    tmp.iterations.throw_on_error = left_.iterations.throw_on_error || right_.iterations.throw_on_error;
+    tmp.iterations.throw_on_error = left_.iterations.TOE() || right_.iterations.TOE();
 
     Decimal left,right;
     left=left_;
     right=right_;
 
-    if (left.type == Decimal::NumType::_NAN || right.type == Decimal::NumType::_NAN) {
+    if (left.IsNaN() || right.IsNaN()) {
+        if (left.iterations.TOE() || right.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
         tmp.SpecialClear();
         tmp.type = Decimal::NumType::_NAN;
         return tmp;
     }
-    else if (left.type == Decimal::NumType::_INFINITY && right.type == Decimal::NumType::_INFINITY) {
+    else if (left.IsInf() && right.IsInf()) {
         if (left.sign == right.sign) {
+            if (left.iterations.TOE() || right.iterations.TOE()) {
+                throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+            }
             tmp.SpecialClear();
             tmp.type = Decimal::NumType::_NAN;
             return tmp;
         }
     }
 
-    if (left.type == Decimal::NumType::_INFINITY) {
+    if (left.IsInf()) {
+        if (left.iterations.TOE() || right.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
         return left;
     }
-    else if (right.type == Decimal::NumType::_INFINITY) {
+    else if (right.IsInf()) {
+        if (left.iterations.TOE() || right.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
         // Invert the sign
         return -right;
     }
@@ -593,14 +611,20 @@ Decimal operator*(const Decimal& left, const Decimal& right)
 {
     Decimal tmp;
     tmp.type = Decimal::NumType::_NORMAL;
-    tmp.iterations.throw_on_error = left.iterations.throw_on_error || right.iterations.throw_on_error;
+    tmp.iterations.throw_on_error = left.iterations.TOE() || right.iterations.TOE();
 
-    if (left.type == Decimal::NumType::_NAN || right.type == Decimal::NumType::_NAN) {
+    if (left.IsNaN() || right.IsNaN()) {
+        if (left.iterations.TOE() || right.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
         tmp.SpecialClear();
         tmp.type = Decimal::NumType::_NAN;
         return tmp;
     }
-    else if (left.type == Decimal::NumType::_INFINITY && right.type == Decimal::NumType::_INFINITY) {
+    else if (left.IsInf() && right.IsInf()) {
+        if (left.iterations.TOE() || right.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
         if (left.sign != right.sign) {
             tmp.SpecialClear();
             tmp.type = Decimal::NumType::_NAN;
@@ -632,7 +656,7 @@ Decimal Decimal::Divide(const Decimal& left, const Decimal& right)
 {
     Decimal tmp;
     tmp.type = Decimal::NumType::_NORMAL;
-    tmp.iterations.throw_on_error = left.iterations.throw_on_error || right.iterations.throw_on_error;
+    tmp.iterations.throw_on_error = left.iterations.TOE() || right.iterations.TOE();
 
     Decimal Q , R , D , N,  zero ;
     Q.type = Decimal::NumType::_NORMAL;
@@ -641,32 +665,6 @@ Decimal Decimal::Divide(const Decimal& left, const Decimal& right)
     N.type = Decimal::NumType::_NORMAL;
     zero = 0;
 
-    if (left.type == Decimal::NumType::_NAN || right.type == Decimal::NumType::_NAN ||
-            (left == zero && right == zero) ||
-            (left.type == Decimal::NumType::_INFINITY && right.type == Decimal::NumType::_INFINITY)) {
-        tmp.SpecialClear();
-        tmp.type = Decimal::NumType::_NAN;
-        return tmp;
-    }
-    else if (right.type == Decimal::NumType::_INFINITY) {
-        tmp = 0;
-        tmp.type = Decimal::NumType::_NORMAL;
-        return tmp;
-    }
-    else if (right == zero)
-    {
-        if (tmp.iterations.throw_on_error) {
-            throw DecimalIllegalOperation("Division by 0");
-        }
-        else {
-            tmp.SpecialClear();
-            tmp.type = Decimal::NumType::_INFINITY;
-            return tmp;
-        }
-    }
-    else if (left == zero) {
-        return zero;
-    }
 
     N=left;
     D=right;
@@ -806,6 +804,38 @@ Decimal Decimal::Divide(const Decimal& left, const Decimal& right)
 };
 
 Decimal operator/(const Decimal& left, const Decimal& right) {
+    Decimal tmp;
+    if (left.IsNaN() || right.IsNaN() ||  (left == 0_D && right == 0_D) || (left.IsInf() && right.IsInf())) {
+        if (left.iterations.TOE() || right.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+        tmp.SpecialClear();
+        tmp.type = Decimal::NumType::_NAN;
+        return tmp;
+    }
+    else if (right.IsInf()) {
+        if (left.iterations.TOE() || right.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+        tmp = 0;
+        tmp.type = Decimal::NumType::_NORMAL;
+        return tmp;
+    }
+    else if (right == 0_D)
+    {
+        if (tmp.iterations.TOE()) {
+            throw DecimalIllegalOperation("Division by 0");
+        }
+        else {
+            tmp.SpecialClear();
+            tmp.type = Decimal::NumType::_INFINITY;
+            return tmp;
+        }
+    }
+    else if (left == 0_D) {
+        return 0_D;
+    }
+
     Decimal X = Decimal::Divide(1_D, right);
 
     // The output from the "Divide" method is almost accurate
@@ -831,7 +861,7 @@ Decimal operator%(const Decimal& left, const Decimal& right)
 {
     Decimal tmp;
     tmp.type = Decimal::NumType::_NORMAL;
-    tmp.iterations.throw_on_error = left.iterations.throw_on_error || right.iterations.throw_on_error;
+    tmp.iterations.throw_on_error = left.iterations.TOE() || right.iterations.TOE();
 
     if( (left.decimals!=0) || (right.decimals!=0) )
     {
@@ -845,10 +875,10 @@ Decimal operator%(const Decimal& left, const Decimal& right)
     N.type = Decimal::NumType::_NORMAL;
     ret.type = Decimal::NumType::_NORMAL;
     zero = 0;
-
-    if (left.type == Decimal::NumType::_NAN || right.type == Decimal::NumType::_NAN ||
-            (left == zero && right == zero) ||
-            (left.type == Decimal::NumType::_INFINITY && right.type == Decimal::NumType::_INFINITY)) {
+    if (left.IsNaN() || right.IsNaN() || (left == zero && right == zero) || (left.IsInf() && right.IsInf())) {
+        if (left.iterations.TOE() || right.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
         tmp.SpecialClear();
         tmp.type = Decimal::NumType::_NAN;
         return tmp;
@@ -956,6 +986,11 @@ Decimal operator%(const Decimal& left, const Decimal& right)
 };
 
 Decimal Decimal::Factorial(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     if (x.decimals > 0 || x < 0) {
         throw DecimalIllegalOperation("Factorial is only allowed for positive integers");
     }
@@ -986,7 +1021,7 @@ Decimal Decimal::Round(const Decimal& x, int places) {
     y.LeadTrim();
     int add_ints = 0;
     int add_decs = 0;
-    int chop_limit = places + x.decimals;
+    int chop_limit = places + y.decimals;
     int force_zero = false;
     if (chop_limit < 0) {
         return x;
@@ -1075,7 +1110,7 @@ Decimal Decimal::Round(const Decimal& x, int places) {
 
     for (size_t i = 0; i < y.number.size(); i++) {
         if (y.number[i] > '9') {
-            if (i+1 < x.number.size()) {
+            if (i+1 < y.number.size()) {
                 ++y.number[i+1];
             }
             else {
@@ -1088,6 +1123,7 @@ Decimal Decimal::Round(const Decimal& x, int places) {
         }
     }
      
+    y.TrailTrim();
     return y;
 }
 
@@ -1196,6 +1232,11 @@ void DecimalConstants::Gen_1Pi() {
 }
 
 Decimal Decimal::nPr(const Decimal& n, const Decimal& k) {
+    if (n.IsNaN() || k.IsNaN() || n.IsInf() || k.IsInf()) {
+        if (n.iterations.TOE() || n.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     if (!n.IsInt() || !k.IsInt()) {
         return Decimal(0);
     }
@@ -1211,6 +1252,11 @@ Decimal Decimal::nPr(const Decimal& n, const Decimal& k) {
 }
 
 Decimal Decimal::nCr(const Decimal& n, const Decimal& k) {
+    if (n.IsNaN() || k.IsNaN() || n.IsInf() || k.IsInf()) {
+        if (n.iterations.TOE() || k.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     if (!n.IsInt() || !k.IsInt()) {
         return Decimal(0);
     }
@@ -1230,6 +1276,12 @@ Decimal Decimal::nCr(const Decimal& n, const Decimal& k) {
 }
 
 Decimal Decimal::Binomial(const Decimal& x, const Decimal& y, const Decimal& n) {
+    if (x.IsNaN() || y.IsNaN() || n.IsNaN() || x.IsInf() || y.IsInf() || n.IsInf()) {
+        //FIXME too, for sinh - this is too long and unwieldly!
+        if (x.iterations.TOE() || y.iterations.TOE() || n.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     if (!n.IsInt()) {
         throw DecimalIllegalOperation("Binomial power must be an integer");
     }
@@ -1288,15 +1340,30 @@ Decimal SeqBernoulli::pTerm(const Decimal& n) const {
 }
 
 Decimal Decimal::Sinh(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     return (xFD::Pow(x) - xFD::Pow(-x)) / 2_D;
 }
 
 Decimal Decimal::Cosh(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     return (xFD::Pow(x) + xFD::Pow(-x)) / 2_D;
 }
 
 // Required to compute e^x
 Decimal Decimal::Tanh(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     if (x.IsInf() || x.IsNaN()) return NaN();
     Decimal i = 1_D;
     Decimal T = 0_D;
@@ -1319,6 +1386,11 @@ Decimal Decimal::Tanh(const Decimal& x) {
 }
 
 Decimal Decimal::Coth(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     if (x == 0_D) {
         if (x.iterations.throw_on_error) {
             throw DecimalIllegalOperation("Hyperbolic Cot is undefined at x = 0");
@@ -1331,10 +1403,20 @@ Decimal Decimal::Coth(const Decimal& x) {
 }
 
 Decimal Decimal::Sech(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     return 1_D/xFD::Cosh(x);
 }
 
 Decimal Decimal::Csch(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     return 1_D/xFD::Sinh(x);
 }
 
@@ -1342,31 +1424,66 @@ Decimal Decimal::Csch(const Decimal& x) {
 // courtesy of logarithms and sqrts.
 
 Decimal Decimal::Asinh(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     return xFD::Ln(x + xFD::Sqrt(x*x + 1));
 }
 
 Decimal Decimal::Acosh(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     return xFD::Ln(x + xFD::Sqrt(x*x - 1));
 }
 
 Decimal Decimal::Atanh(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     return xFD::Ln((1_D+x)/(1_D-x))/2_D;
 }
 
 Decimal Decimal::Acoth(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     return xFD::Ln((x+1_D)/(x-1_D))/2_D;
 }
 
 Decimal Decimal::Asech(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     return xFD::Ln((1_D/x) + xFD::Sqrt(1_D/x*x - 1_D));
 }
 
 Decimal Decimal::Acsch(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     return xFD::Ln((1_D/x) + xFD::Sqrt(1_D/x*x + 1_D));
 }
 
 
 Decimal Decimal::Erf(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     Decimal term = x;
     Decimal n = 1_D;
     Decimal _2n = 2_D;
@@ -1392,6 +1509,11 @@ Decimal Decimal::Erf(const Decimal& x) {
 
 // Computes e^x.
 Decimal Decimal::Pow(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     Decimal xi = xFD::Floor(x);
     Decimal xf = x - xi;
     Decimal txf_2 = xFD::Tanh(xf/2_D);
@@ -1461,12 +1583,22 @@ Decimal Decimal::Pow(const Decimal& x) {
 }
 
 Decimal Decimal::Pow(const Decimal& x, const Decimal& y) {
+    if (x.IsNaN() || x.IsInf() || y.IsNaN() || y.IsInf()) {
+        if (x.iterations.TOE() || y.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     return Pow(x*Ln(y));
 }
 
 
 //TODO there's an Ln approximation - use that instead?
 Decimal Decimal::Ln(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     if (x < 0_D) {
         throw DecimalIllegalOperation("Ln is undefined for negative numbers");
     }
@@ -1479,20 +1611,40 @@ Decimal Decimal::Ln(const Decimal& x) {
 }
 
 Decimal Decimal::Log(const Decimal &x, const Decimal &base) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     return Ln(x)/Ln(base);
 }
 
 Decimal Decimal::Log10(const Decimal &x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     return Ln(x)/xFDCon::Ln10();
 }
 
 Decimal Decimal::Log2(const Decimal &x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     return Ln(x)/xFDCon::Ln2();
 }
 
 
 
 Decimal Decimal::Sin(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     Decimal term = x;
     Decimal n = 3_D;
     Decimal fact = 6_D;
@@ -1510,6 +1662,11 @@ Decimal Decimal::Sin(const Decimal& x) {
 }
 
 Decimal Decimal::Cos(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     Decimal term = 1_D;
     Decimal n = 2_D;
     Decimal fact = 2_D;
@@ -1527,12 +1684,17 @@ Decimal Decimal::Cos(const Decimal& x) {
 }
 
 Decimal Decimal::Tan(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     // There is no Taylor series for tangent!!
     // Fortunately we have an elemntary formula
     // at our disposal.
     Decimal sin = xFD::Sin(x);
     if (sin == 0_D) {
-        if (x.iterations.throw_on_error) {
+        if (x.iterations.TOE()) {
             throw DecimalIllegalOperation("Tan is not defined at the location \"Pi/2\" in the period");
         }
         else {
@@ -1549,19 +1711,39 @@ Decimal Decimal::Tan(const Decimal& x) {
 }
 
 Decimal Decimal::Cot(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     return 1_D/xFD::Tan(x);
 }
 
 Decimal Decimal::Sec(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     return 1_D/xFD::Cos(x);
 }
 
 Decimal Decimal::Csc(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     return 1_D/xFD::Sin(x);
 }
 
 
 Decimal Decimal::Asin(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     if (xFD::Abs(x) > 1_D) {
         throw DecimalIllegalOperation("Inverse sine is only defined for -1 <= x <= 1");
     }
@@ -1593,6 +1775,11 @@ Decimal Decimal::Asin(const Decimal& x) {
 }
 
 Decimal Decimal::Acos(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     if (xFD::Abs(x) > 1_D) {
         throw DecimalIllegalOperation("Inverse cosine is only defined for -1 <= x <= 1");
     }
@@ -1603,6 +1790,11 @@ Decimal Decimal::Acos(const Decimal& x) {
 }
 
 Decimal Decimal::Atan(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     if (xFD::Abs(x) < 1_D) {
         Decimal term = x;
         Decimal n = 3_D;
@@ -1638,7 +1830,11 @@ Decimal Decimal::Atan(const Decimal& x) {
 }
 
 Decimal Decimal::Atan2(const Decimal& x, const Decimal& y) {
-    
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     Decimal PI2 = xFDCon::Pi2();
     if (y == 0_D) {
         if (x.iterations.throw_on_error || y.iterations.throw_on_error) {
@@ -1677,15 +1873,30 @@ Decimal Decimal::Atan2(const Decimal& x, const Decimal& y) {
 }
 
 Decimal Decimal::Acot(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     Decimal PI2 = xFDCon::Pi2();
     return PI2 - Atan(x);
 }
 
 Decimal Decimal::Asec(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     return Acos(1_D/x);
 }
 
 Decimal Decimal::Acsc(const Decimal &x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     return Asin(1_D/x);
 }
 
@@ -2508,12 +2719,22 @@ void Decimal::TrailTrim()
 
 //Math/Scientific Methods
 Decimal Decimal::Abs(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     Decimal a = x;
     a.sign = '+';
     return a;
 }
 
 Decimal Decimal::Sign(const Decimal& x) {
+    if (x.IsNaN() || x.IsInf()) {
+        if (x.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     if (x.sign == '+') {
         return 1_D;
     }
@@ -2527,6 +2748,11 @@ Decimal Decimal::Sign(const Decimal& x) {
 
 Decimal Decimal::operator-() const {
     Decimal a = *this;
+    if (a.IsNaN() || a.IsInf()) {
+        if (a.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+    }
     if (a.sign == '+') {
         a.sign = '-';
     }

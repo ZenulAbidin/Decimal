@@ -335,7 +335,7 @@ BOOST_AUTO_TEST_CASE(Arithmetic) {
     d = "95.045"_D;
     BOOST_CHECK_EQUAL(xFD::Round(d, -3).ToFixedString(), "+95.05");
     BOOST_CHECK_EQUAL(xFD::Round(d, -2).ToFixedString(), "+95");
-    BOOST_CHECK_EQUAL(xFD::Round(d, 2).ToFixedString(), "+100");
+    BOOST_CHECK_EQUAL(xFD::Round(d, 1).ToFixedString(), "+100");
 
 }
 

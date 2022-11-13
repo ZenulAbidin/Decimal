@@ -72,6 +72,8 @@ public:
     // always done normally.
     bool throw_on_error;
 
+    bool TOE() const { return throw_on_error; }
+
     DecimalIterations() {
         E = 40;
         Pi = 1; //TODO try with 2, 3, and higher
