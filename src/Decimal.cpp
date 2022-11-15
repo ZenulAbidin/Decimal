@@ -854,7 +854,9 @@ Decimal operator/(const Decimal& left, const Decimal& right) {
     X.TrailTrim();
     X = xFD::Round(X, -right.iterations.decimals);
 
-    return left*X;
+    Decimal res = left*X;
+    res.TrailTrim();
+    return res;
 }
 
 Decimal operator%(const Decimal& left, const Decimal& right)
