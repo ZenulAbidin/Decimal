@@ -855,7 +855,9 @@ Decimal operator/(const Decimal& left, const Decimal& right) {
     X = (iterations.trunc_not_round) ? xFD::Floor(X) : 
         xFD::Round(X, -right.iterations.decimals);
 
-    return left*X;
+    Decimal res = left*X;
+    res.TrailTrim();
+    return res;
 }
 
 Decimal operator%(const Decimal& left, const Decimal& right)
@@ -1013,6 +1015,7 @@ Decimal Decimal::Floor(const Decimal& x) {
     for (int d = 0; d < x.decimals; d++) {
         y.number.push_front('0');
     }
+    y.TrailTrim();
     return y;
 }
 

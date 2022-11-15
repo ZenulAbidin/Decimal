@@ -28,9 +28,9 @@ class DecimalConstants;
 using xFD = Decimal;
 using xFDCon = DecimalConstants;
 
-Decimal operator"" _D(unsigned long long x);
-Decimal operator"" _D(long double x);
-Decimal operator"" _D(const char* x, size_t size);
+static inline Decimal operator"" _D(unsigned long long x);
+static inline Decimal operator"" _D(long double x);
+static inline Decimal operator"" _D(const char* x, size_t size);
 
 class DecimalIllegalOperation {
 public:
@@ -932,17 +932,17 @@ public:
 // NOTICE: This operator can convert SIGNED 64-bit integers to Decimal. This is required in
 // order to represent negative constants correctly. If you need to convert a literal >2^63
 // to a Decimal, use the string constructor instead.
-Decimal operator"" _D(unsigned long long x)
+static inline Decimal operator"" _D(unsigned long long x)
 {
     return Decimal(static_cast<long long>(x));
 }
 
-Decimal operator"" _D(long double x)
+static inline Decimal operator"" _D(long double x)
 {
     return Decimal(x);
 }
 
-Decimal operator"" _D(const char* x, size_t size)
+static inline Decimal operator"" _D(const char* x, size_t size)
 {
     std::string s(x, size);
     return Decimal(s);
