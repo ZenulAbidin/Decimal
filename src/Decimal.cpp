@@ -852,7 +852,8 @@ Decimal operator/(const Decimal& left, const Decimal& right) {
         }
     }
     X.TrailTrim();
-    X = xFD::Round(X, -right.iterations.decimals);
+    X = (iterations.trunc_not_round) ? xFD::Floor(X) : 
+        xFD::Round(X, -right.iterations.decimals);
 
     return left*X;
 }

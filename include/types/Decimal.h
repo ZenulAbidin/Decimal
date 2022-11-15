@@ -61,6 +61,7 @@ public:
     int tanh;
     int sqrt;
     int trig;
+    bool trunc_not_round;
 
     // A Decimal object can either silently generate an IEEE-754 special number
     // when otherwise-illegal operations happen, or it can throw exceptions.
@@ -85,6 +86,7 @@ public:
         trig = 5;
 
         throw_on_error = true;
+        trunc_not_round = false;
     }
 };
 
