@@ -230,12 +230,13 @@ public:
         return type == NumType::_NAN;
     }
 
-    Decimal operator()(const DecimalIterations& _iterations) {
-        iterations = _iterations;
-        if (iterations.decimals < decimals) {
-            iterations.decimals = decimals;
+    Decimal operator()(const DecimalIterations& _iterations) const {
+        Decimal a = *this;
+        a.iterations = _iterations;
+        if (a.iterations.decimals < a.decimals) {
+            a.iterations.decimals = a.decimals;
         }
-        return *this;
+        return a;
     }
 
     //Assignment operators
