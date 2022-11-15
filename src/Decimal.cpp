@@ -1014,6 +1014,7 @@ Decimal Decimal::Floor(const Decimal& x) {
     for (int d = 0; d < x.decimals; d++) {
         y.number.push_front('0');
     }
+    y.TrailTrim();
     return y;
 }
 
