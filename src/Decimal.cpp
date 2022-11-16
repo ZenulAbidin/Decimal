@@ -837,28 +837,33 @@ Decimal operator/(const Decimal& left, const Decimal& right) {
         return 0_D;
     }
 
-    Decimal X = Decimal::Divide(1_D, right);
+    if (right.iterations.decimals > 0) {
+        Decimal X = Decimal::Divide(1_D, right);
 
-    // The output from the "Divide" method is almost accurate
-    // but is in rare cases, several decimals off-precision.
-    // Newton-Rhapson iteraton will set all the integers right.
-    //
-    // Keep trimming the decimal places, so that it doesn't grow
-    // monstrously.
-    for (int i = 0; i < right.iterations.div; i++) {
-        X = X*(2_D - right*X);
-        while (X.decimals > right.iterations.decimals) {
-            X.decimals--;
-            X.number.pop_front();
+        // The output from the "Divide" method is almost accurate
+        // but is in rare cases, several decimals off-precision.
+        // Newton-Rhapson iteraton will set all the integers right.
+        //
+        // Keep trimming the decimal places, so that it doesn't grow
+        // monstrously.
+        for (int i = 0; i < right.iterations.div; i++) {
+            X = X*(2_D - right*X);
+            while (X.decimals > right.iterations.decimals) {
+                X.decimals--;
+                X.number.pop_front();
+            }
         }
-    }
-    X.TrailTrim();
-    X = (X.iterations.trunc_not_round) ? xFD::Floor(X) : 
-        xFD::Round(X, -right.iterations.decimals);
+        X.TrailTrim();
+        X = (X.iterations.trunc_not_round) ? xFD::Floor(X) : 
+            xFD::Round(X, -right.iterations.decimals);
 
-    Decimal res = left*X;
-    res.TrailTrim();
-    return res;
+        Decimal res = left*X;
+        res.TrailTrim();
+        return res;
+    }
+    else {
+        return Decimal::Divide(left, right);
+    }
 }
 
 Decimal operator%(const Decimal& left, const Decimal& right)
