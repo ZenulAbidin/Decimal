@@ -90,7 +90,7 @@ int Decimal::CompareNum(const Decimal& left, const Decimal& right)
 //Operations without sign and decimals, utilized by Operations
 Decimal Decimal::Sum(const Decimal& left, const Decimal& right)
 {
-    Decimal tmp;
+    Decimal tmp(left.iterations);
     tmp.type = Decimal::NumType::_NORMAL;
     int carry=0;
     size_t loopsize = (left.number.size()>right.number.size()) ? left.number.size() : right.number.size();
@@ -120,7 +120,7 @@ Decimal Decimal::Sum(const Decimal& left, const Decimal& right)
 
 Decimal Decimal::Subtract(const Decimal& left, const Decimal& right)
 {
-    Decimal tmp;
+    Decimal tmp(left.iterations);
     tmp.type = NumType::_NORMAL;
     int carry=0;
     int aus;
@@ -153,8 +153,8 @@ Decimal Decimal::Subtract(const Decimal& left, const Decimal& right)
 
 Decimal Decimal::Multiply(const Decimal& left, const Decimal& right)
 {
-    Decimal ris;
-    Decimal tmp;
+    Decimal ris(left.iterations);
+    Decimal tmp(left.iterations);
     tmp.type = Decimal::NumType::_NORMAL;
     ris.number.push_back('0');
     int carry=0;
@@ -349,7 +349,7 @@ Decimal& Decimal::operator=(long double Num)
 //Operations
 Decimal operator+ ( const Decimal& left_, const Decimal& right_ )
 {
-    Decimal tmp;
+    Decimal tmp(left_.iterations);
     tmp.type = Decimal::NumType::_NORMAL;
     tmp.iterations.throw_on_error = left_.iterations.TOE() || right_.iterations.TOE();
 
@@ -472,7 +472,7 @@ Decimal operator+ ( const Decimal& left_, const Decimal& right_ )
 
 Decimal operator- ( const Decimal& left_, const Decimal& right_ )
 {
-    Decimal tmp;
+    Decimal tmp(left_.iterations);
     tmp.type = Decimal::NumType::_NORMAL;
     tmp.iterations.throw_on_error = left_.iterations.TOE() || right_.iterations.TOE();
 
@@ -609,7 +609,7 @@ Decimal operator- ( const Decimal& left_, const Decimal& right_ )
 
 Decimal operator*(const Decimal& left, const Decimal& right)
 {
-    Decimal tmp;
+    Decimal tmp(left.iterations);
     tmp.type = Decimal::NumType::_NORMAL;
     tmp.iterations.throw_on_error = left.iterations.TOE() || right.iterations.TOE();
 
@@ -654,11 +654,12 @@ Decimal operator*(const Decimal& left, const Decimal& right)
 
 Decimal Decimal::Divide(const Decimal& left, const Decimal& right)
 {
-    Decimal tmp;
+    Decimal tmp(left.iterations);
     tmp.type = Decimal::NumType::_NORMAL;
     tmp.iterations.throw_on_error = left.iterations.TOE() || right.iterations.TOE();
 
-    Decimal Q , R , D , N,  zero ;
+    Decimal Q(left.iterations) , R(left.iterations) , D(left.iterations) ,
+            N(left.iterations),  zero(left.iterations) ;
     Q.type = Decimal::NumType::_NORMAL;
     R.type = Decimal::NumType::_NORMAL;
     D.type = Decimal::NumType::_NORMAL;
@@ -804,7 +805,7 @@ Decimal Decimal::Divide(const Decimal& left, const Decimal& right)
 };
 
 Decimal operator/(const Decimal& left, const Decimal& right) {
-    Decimal tmp;
+    Decimal tmp(left.iterations);
     if (left.IsNaN() || right.IsNaN() ||  (left == 0_D && right == 0_D) || (left.IsInf() && right.IsInf())) {
         if (left.iterations.TOE() || right.iterations.TOE()) {
             throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
@@ -852,7 +853,7 @@ Decimal operator/(const Decimal& left, const Decimal& right) {
         }
     }
     X.TrailTrim();
-    X = (iterations.trunc_not_round) ? xFD::Floor(X) : 
+    X = (X.iterations.trunc_not_round) ? xFD::Floor(X) : 
         xFD::Round(X, -right.iterations.decimals);
 
     Decimal res = left*X;
@@ -862,7 +863,7 @@ Decimal operator/(const Decimal& left, const Decimal& right) {
 
 Decimal operator%(const Decimal& left, const Decimal& right)
 {
-    Decimal tmp;
+    Decimal tmp(left.iterations);
     tmp.type = Decimal::NumType::_NORMAL;
     tmp.iterations.throw_on_error = left.iterations.TOE() || right.iterations.TOE();
 
@@ -871,7 +872,8 @@ Decimal operator%(const Decimal& left, const Decimal& right)
         throw DecimalIllegalOperation("Modulus between non-integers");
     }
 
-    Decimal Q , R , D , N,  zero, ret;
+    Decimal Q(left.iterations) , R(left.iterations) , D(left.iterations) , N(left.iterations), 
+            zero(left.iterations), ret(left.iterations);
     Q.type = Decimal::NumType::_NORMAL;
     R.type = Decimal::NumType::_NORMAL;
     D.type = Decimal::NumType::_NORMAL;

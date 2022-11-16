@@ -139,6 +139,12 @@ public:
         iterations = DecimalIterations();
         type=NumType::_NAN;
     }
+    Decimal(const DecimalIterations& its) {
+        sign='\0';
+        decimals = 0;
+        iterations = its;
+        type=NumType::_NAN;
+    }
     __EXPLICIT__ Decimal(const char* strNum) {
         *this=strNum;
         type=NumType::_NORMAL;
