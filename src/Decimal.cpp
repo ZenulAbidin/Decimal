@@ -33,7 +33,7 @@ Decimal Decimal::FromHex(const std::string& hex) {
     DecimalIterations its;
     its.decimals = 0;
     a.iterations = its;
-    a.sign = "+";
+    a.sign = '+';
     _16.iterations = its;
 
     Decimal _16boost = 1_D(its);
