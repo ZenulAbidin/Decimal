@@ -2667,6 +2667,9 @@ std::string Decimal::ToHex(bool lowercase) const {
     if (IsNaN() || IsInf() || !IsInt()) {
         throw DecimalIllegalOperation("can only convert integers to hex");
     }
+    if (*this == 0_D) {
+        return "0";
+    }
     std::string out, scratch;
     if (sign == '-') {
         out += "-";
