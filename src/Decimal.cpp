@@ -38,12 +38,12 @@ Decimal Decimal::FromHex(const std::string& hex) {
 
     Decimal _16boost = 1_D(its);
     for (auto it = hex.rbegin(); it != hex.rend(); it++) {
-        if (*it == "-") {
+        if (*it == '-') {
             a.sign = '-';
             continue;
         }
-        else if (*it == "+") {
-            a.sign = "+"; // redundant
+        else if (*it == '+') {
+            a.sign = '+'; // redundant
             continue;
         }
         switch (*it) {
