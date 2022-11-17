@@ -33,10 +33,19 @@ Decimal Decimal::FromHex(const std::string& hex) {
     DecimalIterations its;
     its.decimals = 0;
     a.iterations = its;
+    a.sign = "+";
     _16.iterations = its;
 
     Decimal _16boost = 1_D(its);
     for (auto it = hex.rbegin(); it != hex.rend(); it++) {
+        if (*it == "-") {
+            a.sign = '-';
+            continue;
+        }
+        else if (*it == "+") {
+            a.sign = "+"; // redundant
+            continue;
+        }
         switch (*it) {
             case '0':
             break;
