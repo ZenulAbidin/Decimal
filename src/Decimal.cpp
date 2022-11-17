@@ -853,8 +853,12 @@ Decimal Decimal::Divide(const Decimal& left, const Decimal& right)
                 }
 
 		int modnum = Q_sub / 10;
-		if (modnum != 0) {
-			Q.number.push_front(Decimal::IntToChar(modnum));
+		std::deque<char> staging;
+		while (modnum > 0) {
+			staging.push_front(Decimal::IntToChar(modnum % 10));
+		}
+		for (auto it = staging.rbegin(); it != staging.rend(); it++) {
+			Q.number.push_front(Decimal::IntToChar(*it));
 		}
                 Q.number.push_front(Decimal::IntToChar(Q_sub % 10));
 
@@ -1046,8 +1050,12 @@ Decimal operator%(const Decimal& left, const Decimal& right)
                 }
 
 		int modnum = Q_sub / 10;
-		if (modnum != 0) {
-			Q.number.push_front(Decimal::IntToChar(modnum));
+		std::deque<char> staging;
+		while (modnum > 0) {
+			staging.push_front(Decimal::IntToChar(modnum % 10));
+		}
+		for (auto it = staging.rbegin(); it != staging.rend(); it++) {
+			Q.number.push_front(Decimal::IntToChar(*it));
 		}
                 Q.number.push_front(Decimal::IntToChar(Q_sub % 10));
                 ret = R;
