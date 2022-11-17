@@ -2668,7 +2668,7 @@ std::string Decimal::ToHex(bool lowercase) const {
         throw DecimalIllegalOperation("can only convert integers to hex");
     }
     if (*this == 0_D) {
-        return "0";
+        return "00";
     }
     std::string out, scratch;
     if (sign == '-') {
