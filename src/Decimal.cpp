@@ -28,6 +28,77 @@ std::string ToString(const T& t)
 
 //------------------------Private Methods--------------------------------
 
+Decimal Decimal::FromHex(const std::string& hex) {
+    Decimal a = 0_D, _16 = 16_D, boost = 1_D;
+    DecimalIterations its;
+    its.decimals = 0;
+    a.iterations = its;
+    _16.iterations = its;
+
+    Decimal _16boost = 1_D(its);
+    for (auto it = hex.rbegin(); it != hex.rend(); it++) {
+        switch (*it) {
+            case '0':
+            break;
+            case '1':
+                a += 1_D(its) * _16boost;
+            break;
+            case '2':
+                a += 2_D(its) * _16boost;
+            break;
+            case '3':
+                a += 3_D(its) * _16boost;
+            break;
+            case '4':
+                a += 4_D(its) * _16boost;
+            break;
+            case '5':
+                a += 5_D(its) * _16boost;
+            break;
+            case '6':
+                a += 6_D(its) * _16boost;
+            break;
+            case '7':
+                a += 7_D(its) * _16boost;
+            break;
+            case '8':
+                a += 8_D(its) * _16boost;
+            break;
+            case '9':
+                a += 9_D(its) * _16boost;
+            break;
+            case 'a':
+            case 'A':
+                a += 10_D(its) * _16boost;
+            break;
+            case 'b':
+            case 'B':
+                a += 11_D(its) * _16boost;
+            break;
+            case 'c':
+            case 'C':
+                a += 12_D(its) * _16boost;
+            break;
+            case 'd':
+            case 'D':
+                a += 13_D(its) * _16boost;
+            break;
+            case 'e':
+            case 'E':
+                a += 14_D(its) * _16boost;
+            break;
+            case 'f':
+            case 'F':
+                a += 15_D(its) * _16boost;
+            break;
+            default:
+                throw DecimalIllegalOperation("Invalid hex character");
+        }
+        _16boost *= _16;
+    }
+    return a;
+}
+
 //Comparator without sign, utilized by Comparators and Operations
 int Decimal::CompareNum(const Decimal& left, const Decimal& right)
 {
@@ -2648,6 +2719,82 @@ std::string Decimal::ToFixedString() const
     ss>>var;
     return var;
 };
+
+std::string Decimal::ToHex(bool lowercase) const {
+    if (IsNaN() || IsInf() || !IsInt()) {
+        throw DecimalIllegalOperation("can only convert integers to hex");
+    }
+    std::string out, scratch;
+    if (sign == '-') {
+        out += "-";
+    }
+    Decimal q = xFD::Floor(*this);
+    Decimal r = q;
+    Decimal _16 = 16_D;
+    q.iterations.decimals = 0;
+    r.iterations.decimals = 0;
+    _16.iterations.decimals = 0;
+
+    while (q > 0_D) {
+        r = q % _16;
+        q = xFD::Divide(q, _16);
+        if (r == 0_D) {
+            scratch += "0";
+        }
+        else if (r == 1_D) {
+            scratch += "1";
+        }
+        else if (r == 2_D) {
+            scratch += "2";
+        }
+        else if (r == 3_D) {
+            scratch += "3";
+        }
+        else if (r == 4_D) {
+            scratch += "4";
+        }
+        else if (r == 5_D) {
+            scratch += "5";
+        }
+        else if (r == 6_D) {
+            scratch += "6";
+        }
+        else if (r == 7_D) {
+            scratch += "7";
+        }
+        else if (r == 8_D) {
+            scratch += "8";
+        }
+        else if (r == 9_D) {
+            scratch += "9";
+        }
+        else if (r == 10_D) {
+            scratch += (lowercase) ? "a" : "A";
+        }
+        else if (r == 11_D) {
+            scratch += (lowercase) ? "b" : "B";
+        }
+        else if (r == 12_D) {
+            scratch += (lowercase) ? "c" : "C";
+        }
+        else if (r == 13_D) {
+            scratch += (lowercase) ? "d" : "D";
+        }
+        else if (r == 14_D) {
+            scratch += (lowercase) ? "e" : "E";
+        }
+        else if (r == 15_D) {
+            scratch += (lowercase) ? "f" : "F";
+        }
+        else {
+            throw DecimalIllegalOperation("Invalid number");
+        }
+    }
+    for (auto it = scratch.rbegin(); it != scratch.rend(); it++) {
+        out += *it;
+    }
+    return out;
+}
 
 // Normalizes numbers between 0 and 2*Pi.
 Decimal Decimal::TrigPhaseCorrect(const Decimal& x) {

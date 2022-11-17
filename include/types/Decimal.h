@@ -226,6 +226,9 @@ public:
         return a;
     }
 
+    // Do NOT put a leading 0x or 0X.
+    static Decimal FromHex(const std::string& hex);
+
     static Decimal NaN() { return Decimal(); }
 
     bool IsInf() const {
@@ -236,7 +239,7 @@ public:
         return type == NumType::_NAN;
     }
 
-    Decimal operator()(const DecimalIterations& _iterations) const {
+    Decimal operator()(const DecimalIterations& _iterations = DecimalIterations()) const {
         Decimal a = *this;
         a.iterations = _iterations;
         if (a.iterations.decimals < a.decimals) {
@@ -842,6 +845,7 @@ public:
 
     std::string ToString() const;
     std::string ToFixedString() const;
+    std::string ToHex(bool lowercase=false) const;
 
     bool GetThrowOnError() const { return iterations.throw_on_error; }
     void SetThrowOnError(bool toe) { iterations.throw_on_error = toe; }

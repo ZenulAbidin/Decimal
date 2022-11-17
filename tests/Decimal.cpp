@@ -337,6 +337,11 @@ BOOST_AUTO_TEST_CASE(Arithmetic) {
     BOOST_CHECK_EQUAL(xFD::Round(d, -2).ToFixedString(), "+95");
     BOOST_CHECK_EQUAL(xFD::Round(d, 1).ToFixedString(), "+100");
 
+    // Hex tests
+    BOOST_CHECK_EQUAL(255_D().ToHex(), "FF");
+    BOOST_CHECK_EQUAL(4096_D().ToHex(), "1000");
+    BOOST_CHECK_EQUAL(Decimal::FromHex("FF"), 255_D);
+    BOOST_CHECK_EQUAL(Decimal::FromHex("1000"), 4096_D);
 }
 
 BOOST_AUTO_TEST_SUITE_END();
