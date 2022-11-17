@@ -4,7 +4,7 @@ LDFLAGS=
 
 all: libxFD.so
 
-tests: test_decimal playground
+tests: test_decimal playground hexdec
 
 %.o: %.cpp
 	${CXX} -c $^ -o $@ ${CXXFLAGS}
@@ -15,8 +15,12 @@ libxFD.so: src/Decimal.o
 test_decimal: tests/Decimal.o libxFD.so
 	${CXX} $^ -o $@ ${LDFLAGS} -lboost_unit_test_framework
 
+hexdec: tests/hexdec.o libxFD.so
+	${CXX} $^ -o $@ ${LDFLAGS}
+
+
 playground: tests/playground.o libxFD.so
 	${CXX} $^ -o $@ ${LDFLAGS}
 
 clean:
-	rm -f src/*.o tests/*.o libxFD.so test_decimal playground
+	rm -f src/*.o tests/*.o libxFD.so test_decimal hexdec playground

@@ -56,6 +56,12 @@ public:
     int decimals;
     int E;
     int Pi;
+
+    // Number of Newton-Rhapson iterations to run on the reciprocal of the divisor during division.
+    // Zero disables the iterations.
+    // It is highly recommended to set this to a number greater than zero, because several unrelated
+    // functions depend on the quotient being correct (e.g. Modulus & ToHex to give the correct
+    // answer for enormous (>Abs(2^64)) numbers.
     int div;
     int ln;
     int tanh;

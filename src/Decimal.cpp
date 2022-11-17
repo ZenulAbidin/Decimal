@@ -727,6 +727,7 @@ Decimal operator*(const Decimal& left, const Decimal& right)
         tmp.iterations.decimals = right.iterations.decimals;
     }
     tmp.LeadTrim();
+    tmp.TrailTrim();
 
     return tmp;
 };
@@ -966,15 +967,7 @@ Decimal operator%(const Decimal& left, const Decimal& right)
         throw DecimalIllegalOperation("Modulus between non-integers");
     }
 
-    Decimal Q(left.iterations) , R(left.iterations) , D(left.iterations) , N(left.iterations), 
-            zero(left.iterations), ret(left.iterations);
-    Q.type = Decimal::NumType::_NORMAL;
-    R.type = Decimal::NumType::_NORMAL;
-    D.type = Decimal::NumType::_NORMAL;
-    N.type = Decimal::NumType::_NORMAL;
-    ret.type = Decimal::NumType::_NORMAL;
-    zero = 0;
-    if (left.IsNaN() || right.IsNaN() || (left == zero && right == zero) || (left.IsInf() && right.IsInf())) {
+    if (left.IsNaN() || right.IsNaN() || (left == 0_D && right == 0_D) || (left.IsInf() && right.IsInf())) {
         if (left.iterations.TOE() || right.iterations.TOE()) {
             throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
         }
@@ -984,7 +977,7 @@ Decimal operator%(const Decimal& left, const Decimal& right)
     }
 
 
-    if (right == zero)
+    if (right == 0_D)
     {
         if (tmp.iterations.throw_on_error) {
             throw DecimalIllegalOperation("Modulus by 0");
@@ -996,102 +989,24 @@ Decimal operator%(const Decimal& left, const Decimal& right)
         }
     }
 
-    N= ( left>zero ) ? (left) : (left * (-1)) ;
-    D= ( right>zero ) ? (right) : (right* (-1)) ;
-    R.sign='+';
+    Decimal left_ = left, right_ = right;
+    DecimalIterations its;
+    left_.iterations = its;
+    right_.iterations = its;
 
-    int check= Decimal::CompareNum(N,D);
-
-    if(check==0)
-    {
-        return zero;
-    }
-    if(check==2)
-    {
-        return left;
-    }
-    else
-    {
-        while(!N.number.empty())
-        {
-            R.number.push_front(*(N.number.rbegin()));
-            N.number.pop_back();
-
-            bool is_zero=true;
-            std::deque<char>::const_iterator zero_iter = R.number.begin();
-            for(;zero_iter!= R.number.end();++zero_iter)
-                if(*zero_iter!='0')
-                    is_zero=false;
-
-            if((R>=D) && (!is_zero))
-            {
-                int Q_sub=0;
-                int min=0;
-                int max = 9;
-
-                while( R >= D)
-                {
-                    int avg = max-min;
-                    int mod_avg = avg / 2;
-                    avg= (avg - mod_avg * 2) ? (mod_avg + 1) : (mod_avg);
-
-                    int div_check = Decimal::CompareNum ( R, D*avg );
-
-                    if (div_check == 2)
-                    {
-                        max = avg;
-                    }
-                    else
-                    {
-                        Q_sub = Q_sub + avg;
-                        R = R - D * avg;
-
-                        max = 9;
-                    }
-                }
-
-		int modnum = Q_sub / 10;
-		std::deque<char> staging;
-		while (modnum > 0) {
-			staging.push_front(modnum % 10);
-			modnum /= 10;
-		}
-		for (auto it = staging.rbegin(); it != staging.rend(); it++) {
-			Q.number.push_front(Decimal::IntToChar(*it));
-		}
-                Q.number.push_front(Decimal::IntToChar(Q_sub % 10));
-                ret = R;
-
-                bool is_zero=true;
-                std::deque<char>::const_iterator zero_iter = R.number.begin();
-                for(;zero_iter!= R.number.end();++zero_iter)
-                    if(*zero_iter!='0')
-                        is_zero=false;
-                if(is_zero)
-                    R.number.clear();
-            }
-            else
-            {
-                ret = R;
-                Q.number.push_front('0');
-            }
-        }
-
-        Q.LeadTrim();
-        ret.LeadTrim();
-        tmp = ret;
-    }
-
-    if( ((left.sign=='-')&& (right.sign=='-')) || ((left.sign=='+')&& (right.sign=='+')) )
-        tmp.sign='+';
-    else
-        tmp.sign='-';
-
-    if(!Decimal::CompareNum(tmp,zero))
-        tmp.sign='+';
-
-    return tmp;
-};
+    // 416984806968863648079 % 16
+    // is broken, check in debugger.
+    // check hex 458479643868196418248935325987194
+    Decimal Q = left / right;
+    // Obtain the fractional part and multiply it by `right`
+    // to get the mod number.
+    // The result should be an integer or ridiculously
+    // close to one.
+    Decimal res = xFD::Round((Q - xFD::Floor(Q)) * right);
+    res.TrailTrim();
+    res.iterations = left.iterations;
+    return res;
+}
 
 Decimal Decimal::Factorial(const Decimal& x) {
     if (x.IsNaN() || x.IsInf()) {
@@ -1125,6 +1040,7 @@ Decimal Decimal::Floor(const Decimal& x) {
 }
 
 Decimal Decimal::Round(const Decimal& x, int places) {
+    --places; // To get the true rounding behavior.
     auto y = x;
     y.TrailTrim();
     y.LeadTrim();
@@ -2758,13 +2674,10 @@ std::string Decimal::ToHex(bool lowercase) const {
     Decimal q = xFD::Floor(*this);
     Decimal r = q;
     Decimal _16 = 16_D;
-    q.iterations.decimals = 0;
-    r.iterations.decimals = 0;
-    _16.iterations.decimals = 0;
 
     while (q > 0_D) {
         r = q % _16;
-        q = xFD::Divide(q, _16);
+        q = xFD::Floor(q /_16);
         if (r == 0_D) {
             scratch += "0";
         }
