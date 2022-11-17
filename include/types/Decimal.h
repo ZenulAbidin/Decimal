@@ -115,7 +115,12 @@ private:
 
     //Transformations int<-->char single digit
     inline static int CharToInt(const char& val) { return (val - '0'); };
-    inline static char IntToChar(const int& val) { return (val + '0'); };
+    inline static char IntToChar(const int& val) {
+        if (val < '0' || val > '9') {
+            throw DecimalIllegalOperation("\"" + ToString(val) + "\" is not a valid decimal digit.");
+        }
+        return (val + '0');
+    };
 
     //Comparator without sign, utilized by Comparators and Operations
     static int CompareNum(const Decimal& left, const Decimal& right);
