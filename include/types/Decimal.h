@@ -116,8 +116,8 @@ private:
     //Transformations int<-->char single digit
     inline static int CharToInt(const char& val) { return (val - '0'); };
     inline static char IntToChar(const int& val) {
-        if (val < '0' || val > '9') {
-            throw DecimalIllegalOperation("\"" + ToString(val) + "\" is not a valid decimal digit.");
+        if (val < 0 || val > 9) {
+            throw DecimalIllegalOperation("\"" + std::to_string(val) + "\" is not a valid decimal digit.");
         }
         return (val + '0');
     };

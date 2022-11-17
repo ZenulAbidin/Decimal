@@ -2,5 +2,6 @@
 *.o
 */*.o
 */*.so
+*.swp
 playground
 test_decimal

@@ -852,7 +852,11 @@ Decimal Decimal::Divide(const Decimal& left, const Decimal& right)
                     }
                 }
 
-                Q.number.push_front(Decimal::IntToChar(Q_sub));
+		int modnum = Q_sub / 10;
+		if (modnum != 0) {
+			Q.number.push_front(Decimal::IntToChar(modnum));
+		}
+                Q.number.push_front(Decimal::IntToChar(Q_sub % 10));
 
                 bool is_zero=true;
                 std::deque<char>::const_iterator zero_iter = R.number.begin();
@@ -1041,7 +1045,11 @@ Decimal operator%(const Decimal& left, const Decimal& right)
                     }
                 }
 
-                Q.number.push_front(Decimal::IntToChar(Q_sub));
+		int modnum = Q_sub / 10;
+		if (modnum != 0) {
+			Q.number.push_front(Decimal::IntToChar(modnum));
+		}
+                Q.number.push_front(Decimal::IntToChar(Q_sub % 10));
                 ret = R;
 
                 bool is_zero=true;
