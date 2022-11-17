@@ -340,8 +340,10 @@ BOOST_AUTO_TEST_CASE(Arithmetic) {
     // Hex tests
     BOOST_CHECK_EQUAL(255_D().ToHex(), "FF");
     BOOST_CHECK_EQUAL(4096_D().ToHex(), "1000");
+    BOOST_CHECK_EQUAL(1_D().ToHex(), "01");
     BOOST_CHECK_EQUAL(Decimal::FromHex("FF"), 255_D);
     BOOST_CHECK_EQUAL(Decimal::FromHex("1000"), 4096_D);
+    BOOST_CHECK_EQUAL(Decimal::FromHex("1"), 1_D);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

@@ -2817,6 +2817,9 @@ std::string Decimal::ToHex(bool lowercase) const {
             throw DecimalIllegalOperation("Invalid number");
         }
     }
+    if (scratch.length() % 2 != 0) {
+        scratch += "0";
+    }
     for (auto it = scratch.rbegin(); it != scratch.rend(); it++) {
         out += *it;
     }
