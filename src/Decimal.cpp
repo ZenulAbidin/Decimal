@@ -855,7 +855,7 @@ Decimal Decimal::Divide(const Decimal& left, const Decimal& right)
 		int modnum = Q_sub / 10;
 		std::deque<char> staging;
 		while (modnum > 0) {
-			staging.push_front(Decimal::IntToChar(modnum % 10));
+			staging.push_front(modnum % 10);
 			modnum /= 10;
 		}
 		for (auto it = staging.rbegin(); it != staging.rend(); it++) {
@@ -1053,7 +1053,7 @@ Decimal operator%(const Decimal& left, const Decimal& right)
 		int modnum = Q_sub / 10;
 		std::deque<char> staging;
 		while (modnum > 0) {
-			staging.push_front(Decimal::IntToChar(modnum % 10));
+			staging.push_front(modnum % 10);
 			modnum /= 10;
 		}
 		for (auto it = staging.rbegin(); it != staging.rend(); it++) {
