@@ -570,6 +570,7 @@ public:
     }
 
     static Decimal Divide(const Decimal& left, const Decimal& right);
+    static Decimal Mod(const Decimal& left, const Decimal& right);
 
     friend Decimal operator%(const Decimal& left, const Decimal& right);
     friend Decimal operator%(const Decimal& left, const char& right)
