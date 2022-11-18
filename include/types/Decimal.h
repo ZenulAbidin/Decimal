@@ -15,7 +15,17 @@
 #include <sstream>
 #include <stdint.h>
 
-// Carry-over from UniValue
+// Create an include file with this name, with the following line:
+// #define __EXPLICIT__ explicit
+// if you want you integrate xFD into a larger class, that has
+// constructors which take integer types. This modification will
+// disable the implicit type conversion from primitives to Decimal,
+// so that they are passed to your class and don't trigger a compile
+// error about ambiguity.
+
+#ifdef HAVE_TYPES_EXPLICIT
+#include "types/explicit.h"
+#endif
 
 #ifndef __EXPLICIT__
 #define __EXPLICIT__
