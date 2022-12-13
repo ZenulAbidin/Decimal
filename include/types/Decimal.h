@@ -15,7 +15,17 @@
 #include <sstream>
 #include <stdint.h>
 
-// Carry-over from UniValue
+// Create an include file with this name, with the following line:
+// #define __EXPLICIT__ explicit
+// if you want you integrate xFD into a larger class, that has
+// constructors which take integer types. This modification will
+// disable the implicit type conversion from primitives to Decimal,
+// so that they are passed to your class and don't trigger a compile
+// error about ambiguity.
+
+#ifdef HAVE_TYPES_EXPLICIT
+#include "types/explicit.h"
+#endif
 
 #ifndef __EXPLICIT__
 #define __EXPLICIT__
@@ -56,6 +66,12 @@ public:
     int decimals;
     int E;
     int Pi;
+
+    // Number of Newton-Rhapson iterations to run on the reciprocal of the divisor during division.
+    // Zero disables the iterations.
+    // It is highly recommended to set this to a number greater than zero, because several unrelated
+    // functions depend on the quotient being correct (e.g. Modulus & ToHex to give the correct
+    // answer for enormous (>Abs(2^64)) numbers.
     int div;
     int ln;
     int tanh;
@@ -115,7 +131,12 @@ private:
 
     //Transformations int<-->char single digit
     inline static int CharToInt(const char& val) { return (val - '0'); };
-    inline static char IntToChar(const int& val) { return (val + '0'); };
+    inline static char IntToChar(const int& val) {
+        if (val < 0 || val > 9) {
+            throw DecimalIllegalOperation("\"" + std::to_string(val) + "\" is not a valid decimal digit.");
+        }
+        return (val + '0');
+    };
 
     //Comparator without sign, utilized by Comparators and Operations
     static int CompareNum(const Decimal& left, const Decimal& right);
@@ -559,6 +580,7 @@ public:
     }
 
     static Decimal Divide(const Decimal& left, const Decimal& right);
+    static Decimal Mod(const Decimal& left, const Decimal& right);
 
     friend Decimal operator%(const Decimal& left, const Decimal& right);
     friend Decimal operator%(const Decimal& left, const char& right)

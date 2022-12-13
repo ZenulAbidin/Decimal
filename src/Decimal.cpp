@@ -33,10 +33,19 @@ Decimal Decimal::FromHex(const std::string& hex) {
     DecimalIterations its;
     its.decimals = 0;
     a.iterations = its;
+    a.sign = '+';
     _16.iterations = its;
 
     Decimal _16boost = 1_D(its);
     for (auto it = hex.rbegin(); it != hex.rend(); it++) {
+        if (*it == '-') {
+            a.sign = '-';
+            continue;
+        }
+        else if (*it == '+') {
+            a.sign = '+'; // redundant
+            continue;
+        }
         switch (*it) {
             case '0':
             break;
@@ -718,6 +727,7 @@ Decimal operator*(const Decimal& left, const Decimal& right)
         tmp.iterations.decimals = right.iterations.decimals;
     }
     tmp.LeadTrim();
+    tmp.TrailTrim();
 
     return tmp;
 };
@@ -843,7 +853,16 @@ Decimal Decimal::Divide(const Decimal& left, const Decimal& right)
                     }
                 }
 
-                Q.number.push_front(Decimal::IntToChar(Q_sub));
+		int modnum = Q_sub / 10;
+		std::deque<char> staging;
+		while (modnum > 0) {
+			staging.push_front(modnum % 10);
+			modnum /= 10;
+		}
+		for (auto it = staging.rbegin(); it != staging.rend(); it++) {
+			Q.number.push_front(Decimal::IntToChar(*it));
+		}
+                Q.number.push_front(Decimal::IntToChar(Q_sub % 10));
 
                 bool is_zero=true;
                 std::deque<char>::const_iterator zero_iter = R.number.begin();
@@ -948,6 +967,58 @@ Decimal operator%(const Decimal& left, const Decimal& right)
         throw DecimalIllegalOperation("Modulus between non-integers");
     }
 
+    if (left.IsNaN() || right.IsNaN() || (left == 0_D && right == 0_D) || (left.IsInf() && right.IsInf())) {
+        if (left.iterations.TOE() || right.iterations.TOE()) {
+            throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
+        }
+        tmp.SpecialClear();
+        tmp.type = Decimal::NumType::_NAN;
+        return tmp;
+    }
+
+
+    if (right == 0_D)
+    {
+        if (tmp.iterations.throw_on_error) {
+            throw DecimalIllegalOperation("Modulus by 0");
+        }
+        else {
+            tmp.SpecialClear();
+            tmp.type = Decimal::NumType::_NAN;
+            return tmp;
+        }
+    }
+
+    Decimal left_ = left, right_ = right;
+    DecimalIterations its;
+    left_.iterations = its;
+    right_.iterations = its;
+
+    // 416984806968863648079 % 16
+    // is broken, check in debugger.
+    // check hex 458479643868196418248935325987194
+    Decimal Q = left / right;
+    // Obtain the fractional part and multiply it by `right`
+    // to get the mod number.
+    // The result should be an integer or ridiculously
+    // close to one.
+    Decimal res = xFD::Round((Q - xFD::Floor(Q)) * right);
+    res.TrailTrim();
+    res.iterations = left.iterations;
+    return res;
+}
+
+// UNSAFE. INTERNAL USE ONLY.
+Decimal Decimal::Mod(const Decimal& left, const Decimal& right)
+{
+    Decimal tmp(left.iterations);
+    tmp.type = Decimal::NumType::_NORMAL;
+    tmp.iterations.throw_on_error = left.iterations.TOE() || right.iterations.TOE();
+    if( (left.decimals!=0) || (right.decimals!=0) )
+    {
+        throw DecimalIllegalOperation("Modulus between non-integers");
+    }
+
     Decimal Q(left.iterations) , R(left.iterations) , D(left.iterations) , N(left.iterations), 
             zero(left.iterations), ret(left.iterations);
     Q.type = Decimal::NumType::_NORMAL;
@@ -956,7 +1027,7 @@ Decimal operator%(const Decimal& left, const Decimal& right)
     N.type = Decimal::NumType::_NORMAL;
     ret.type = Decimal::NumType::_NORMAL;
     zero = 0;
-    if (left.IsNaN() || right.IsNaN() || (left == zero && right == zero) || (left.IsInf() && right.IsInf())) {
+    if (left.IsNaN() || right.IsNaN() || (left == 0_D && right == 0_D) || (left.IsInf() && right.IsInf())) {
         if (left.iterations.TOE() || right.iterations.TOE()) {
             throw DecimalIllegalOperation("IEE754 special number arithmetic is disabled");
         }
@@ -967,6 +1038,7 @@ Decimal operator%(const Decimal& left, const Decimal& right)
 
 
     if (right == zero)
+    if (right == 0_D)
     {
         if (tmp.iterations.throw_on_error) {
             throw DecimalIllegalOperation("Modulus by 0");
@@ -1032,7 +1104,16 @@ Decimal operator%(const Decimal& left, const Decimal& right)
                     }
                 }
 
-                Q.number.push_front(Decimal::IntToChar(Q_sub));
+		int modnum = Q_sub / 10;
+		std::deque<char> staging;
+		while (modnum > 0) {
+			staging.push_front(modnum % 10);
+			modnum /= 10;
+		}
+		for (auto it = staging.rbegin(); it != staging.rend(); it++) {
+			Q.number.push_front(Decimal::IntToChar(*it));
+		}
+                Q.number.push_front(Decimal::IntToChar(Q_sub % 10));
                 ret = R;
 
                 bool is_zero=true;
@@ -1064,7 +1145,8 @@ Decimal operator%(const Decimal& left, const Decimal& right)
         tmp.sign='+';
 
     return tmp;
-};
+}
+
 
 Decimal Decimal::Factorial(const Decimal& x) {
     if (x.IsNaN() || x.IsInf()) {
@@ -1098,6 +1180,7 @@ Decimal Decimal::Floor(const Decimal& x) {
 }
 
 Decimal Decimal::Round(const Decimal& x, int places) {
+    --places; // To get the true rounding behavior.
     auto y = x;
     y.TrailTrim();
     y.LeadTrim();
@@ -2724,6 +2807,9 @@ std::string Decimal::ToHex(bool lowercase) const {
     if (IsNaN() || IsInf() || !IsInt()) {
         throw DecimalIllegalOperation("can only convert integers to hex");
     }
+    if (*this == 0_D) {
+        return "00";
+    }
     std::string out, scratch;
     if (sign == '-') {
         out += "-";
@@ -2731,13 +2817,10 @@ std::string Decimal::ToHex(bool lowercase) const {
     Decimal q = xFD::Floor(*this);
     Decimal r = q;
     Decimal _16 = 16_D;
-    q.iterations.decimals = 0;
-    r.iterations.decimals = 0;
-    _16.iterations.decimals = 0;
 
     while (q > 0_D) {
         r = q % _16;
-        q = xFD::Divide(q, _16);
+        q = xFD::Floor(q /_16);
         if (r == 0_D) {
             scratch += "0";
         }
@@ -2789,6 +2872,9 @@ std::string Decimal::ToHex(bool lowercase) const {
         else {
             throw DecimalIllegalOperation("Invalid number");
         }
+    }
+    if (scratch.length() % 2 != 0) {
+        scratch += "0";
     }
     for (auto it = scratch.rbegin(); it != scratch.rend(); it++) {
         out += *it;

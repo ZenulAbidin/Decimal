@@ -4,5 +4,7 @@
 */*.so
 tags
 tags.lock
+*.swp
 playground
 test_decimal
+hexdec
