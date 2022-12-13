@@ -2,5 +2,7 @@
 *.o
 */*.o
 */*.so
+tags
+tags.lock
 playground
 test_decimal
