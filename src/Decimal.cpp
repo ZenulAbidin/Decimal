@@ -1005,7 +1005,19 @@ Decimal operator%(const Decimal& left, const Decimal& right)
     Decimal res = xFD::Round((Q - xFD::Floor(Q)) * right);
     res.TrailTrim();
     res.iterations = left.iterations;
-    return res;
+
+    if (res == 0_D) {
+        auto divres = left / right;
+         if (xFD::Floor(divres) != divres) {
+            // The calculation must have overflown. Try again with the unsafe version
+            // which is good at calculating mod of huge numbers
+            return xFD::Mod(left, right);
+         }
+        return res;
+    }
+    else {
+        return res;
+    }
 }
 
 // UNSAFE. INTERNAL USE ONLY.
