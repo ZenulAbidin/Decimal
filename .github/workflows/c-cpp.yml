@@ -25,9 +25,10 @@ jobs:
       run: |
         debug=1 make tests -j2
         LD_LIBRARY_PATH=$(pwd) ./test_decimal
+    - name: Capture coverage data
+      run: lcov –c –d . –o coverage.info
     - name: Report test-coverage to DeepSource
       run: |
-        lcov –c –d . –o coverage.info
         # Export the secret
         export DEEPSOURCE_DSN=${{ secrets.DEEPSOURCE_DSN }}
         
