@@ -1,12 +1,12 @@
 CXX=g++
 CXXFLAGS=-Wall -std=c++11 -fPIC -I./include
+LDFLAGS=
 if debug
-	CXXFLAGS=${CXXFLAGS} -g -fprofile-arcs -ftest-coverage
+	CXXFLAGS=${CXXFLAGS} -g -coverage
+	LDFLAGS=${LDFLAGS} -coverage
 else
 	CXXFLAGS=${CXXFLAGS} -O2 -fstack-reuse=none -Wstack-protector -fstack-protector-all -fcf-protection=full -fstack-clash-protection
 fi
-
-LDFLAGS=
 
 all: libxFD.so
 
