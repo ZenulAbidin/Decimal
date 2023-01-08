@@ -24,7 +24,7 @@ jobs:
     - name: Run Tests
       run: |
         make tests -j2
-        ./test_decimal
+        LD_LIBRARY_PATH=$(pwd) ./test_decimal
     - name: Report test-coverage to DeepSource
       run: |
         # Export the secret
