@@ -1,7 +1,7 @@
 CXX=g++
 CXXFLAGS=-Wall -std=c++11 -fPIC -I./include
 LDFLAGS=
-if debug
+ifdef debug
 	CXXFLAGS=${CXXFLAGS} -g -coverage
 	LDFLAGS=${LDFLAGS} -coverage
 else
