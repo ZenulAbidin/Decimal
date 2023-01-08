@@ -6,7 +6,7 @@ ifdef debug
 	LDFLAGS=${LDFLAGS} -coverage
 else
 	CXXFLAGS=${CXXFLAGS} -O2 -fstack-reuse=none -Wstack-protector -fstack-protector-all -fcf-protection=full -fstack-clash-protection
-fi
+endif
 
 all: libxFD.so
 
