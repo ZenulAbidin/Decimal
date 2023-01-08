@@ -26,7 +26,7 @@ jobs:
         debug=1 make tests -j2
         LD_LIBRARY_PATH=$(pwd) ./test_decimal
     - name: Capture coverage data
-      run: xargs lcov <<< -c –d . –o coverage.info
+      run: lcov --capture --directory . --output-file coverage.info
     - name: Report test-coverage to DeepSource
       run: |
         # Export the secret
