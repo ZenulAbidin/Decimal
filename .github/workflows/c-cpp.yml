@@ -1,0 +1,41 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps: 
+    - uses: actions/checkout@v3
+    - name: Cancel Previous Runs
+      uses: styfle/cancel-workflow-action@0.10.1
+    - name: Install dependencies
+      run: >
+        sudo apt-get install -y build-essential
+        libboost-system-dev libboost-test-dev
+    - name: autogen
+      run: ./autogen.sh
+    - name: configure
+      run: ./configure
+    - name: make
+      run: make -j2
+    - name: Run Tests
+      run: make check -j2
+    - name: Run Tests
+      run: make check -j2
+    - name: Report test-coverage to DeepSource
+      run: |
+        # Export the secret
+        export DEEPSOURCE_DSN=${{ secrets.DEEPSOURCE_DSN }}
+        
+        # Install the CLI
+        curl https://deepsource.io/cli | sh
+
+        # Send the report to DeepSource
+        ./bin/deepsource report --analyzer test-coverage --key cxx --value-file ./coverage.info
