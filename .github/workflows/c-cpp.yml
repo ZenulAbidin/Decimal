@@ -18,7 +18,7 @@ jobs:
     - name: Install dependencies
       run: >
         sudo apt-get install -y build-essential
-        libboost-system-dev libboost-test-dev
+        libboost-system-dev libboost-test-dev lcov
     - name: make
       run: debug=1 make -j2
     - name: Run Tests
